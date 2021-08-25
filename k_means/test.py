@@ -12,14 +12,38 @@ class testKmeans(unittest.TestCase):
         X = np.array(data_1[['x0', 'x1']])
        
         for z in [True, False]:
-            model_1 = km.KMeans(2, z)
-            self.assertEqual(model_1.k, 2)
+            k = 2
+            model_1 = km.KMeans(k, z)
+            self.assertEqual(model_1.k, k)
             self.assertEqual(model_1.centRand, z)
             model_1.fit(X)
-            self.assertEqual(model_1.centroids.shape, (2,2))
+            self.assertEqual(model_1.centroids.shape, (k,X.shape[1]))
             self.assertEqual(model_1.Xcent.shape[0], X.shape[0])
-            self.assertEqual(len(model_1.cent), 500)
-            model_1.predict(X)
+            self.assertEqual(len(model_1.cent), k)
+            
+            
+            a = model_1.predict(X)
+            self.assertEqual(np.sum(np.where(a == -1, 1,0)), 0)
+            print(km.euclidean_silhouette(X,a))
+    def testInit2(self):
+        data_1 = pd.read_csv('data_2.csv')
+        X = np.array(data_1[['x0', 'x1']])
+       
+        for z in [True, False]:
+            k = 10
+            model_1 = km.KMeans(k, z)
+            self.assertEqual(model_1.k, k)
+            self.assertEqual(model_1.centRand, z)
+            model_1.fit(X)
+            self.assertEqual(model_1.centroids.shape, (k,X.shape[1]))
+            self.assertEqual(model_1.Xcent.shape[0], X.shape[0])
+            self.assertEqual(len(model_1.cent), k)
+            
+            
+            a = model_1.predict(X)
+            self.assertEqual(np.sum(np.where(a == -1, 1,0)), 0)
+            print(km.euclidean_silhouette(X,a))
+            print(km.euclidean_distortion(X,a))
     """
     def test_upper(self):
         self.assertEqual('foo'.upper(), 'FOO')

@@ -10,6 +10,7 @@ class KMeans(object):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         #self.centroids = np.empty(0)
+        self.start = True
         self.k = myK
         self.centroids = np.empty(0)
         self.centRand = cr 
@@ -19,11 +20,27 @@ class KMeans(object):
     def getCenterIndex(self, cNumb):
         return cent[cNumb]
     def assignToCenter(self, xNumb, cNumb):
-        oldC = self.Xcent[xNumb]
+        oldC = int(self.Xcent[xNumb])
         if oldC != -1:
             self.cent[oldC].remove(xNumb)
         self.Xcent[xNumb] = cNumb
         self.cent[cNumb].append(xNumb)
+
+    def assignClosest(self, X):
+        for i, sample in enumerate(X):
+            dist = euclidean_distance(np.array(sample), np.array(self.centroids))
+            myC = int(np.argmin(dist))
+
+            self.assignToCenter(i, myC)
+            #new = np.copy(X[self.cent[myC], :])
+            #oldStd = new.std()
+            #new = np.append(new, sample)
+            #newStd = new.std()
+            #if newStd < oldStd or self.start == True:
+             #   self.assignToCenter(i, myC)
+            #else:
+                #print(newStd, oldStd)
+
     def fit(self, X):
         """
         Estimates parameters for the classifier
@@ -45,7 +62,7 @@ class KMeans(object):
         # initliallize other arrays
         self.Xcent = np.zeros(X.shape[0])
         self.Xcent[:] = -1
-        self.cent = [[-1] for i in range(len(X))]
+        self.cent = [[] for i in range(self.k)]
 
     def predict(self, X):
         """
@@ -63,12 +80,21 @@ class KMeans(object):
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
-        # TODO: Implement 
-
         # assign to closest centroid
-        for i, sample in enumerate(X):
-            dist = euclidean_distance(np.array(sample), np.array(self.centroids))
-            self.assignToCenter(i, np.argmin(dist))
+        dist = 2
+        while dist != 0:
+            self.assignClosest(X)
+            dist = 0
+            for i in range(self.k):
+                new = [0,0]
+                new[0] = np.mean(X[self.cent[i], 0])
+                new[1] = np.mean(X[self.cent[i], 1])
+
+                dist += euclidean_distance(self.centroids[i], new)
+                self.centroids[i] = new
+            print(dist)
+            self.start = False
+        return np.array(self.Xcent, np.int)
     
     def get_centroids(self):
         """
@@ -85,8 +111,7 @@ class KMeans(object):
             [xm_1, xm_2, ..., xm_n]
         ])
         """
-        # TODO: Implement 
-        raise NotImplementedError()
+        return self.centroids
     
     
     
