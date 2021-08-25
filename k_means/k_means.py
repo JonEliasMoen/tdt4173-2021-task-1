@@ -1,16 +1,29 @@
 import numpy as np 
-import pandas as pd 
+import pandas as pd
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
 
 
-class KMeans:
+class KMeans(object):
     
-    def __init__(self):
+    def __init__(self, myK, cr):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
-        pass
-        
+        #self.centroids = np.empty(0)
+        self.k = myK
+        self.centroids = np.empty(0)
+        self.centRand = cr 
+        self.Xcent = np.empty(0) # 1-D array (m), centroid assignment
+        self.cent = [] # 2-D array(M, ..) all indexes in X for centoid i
+
+    def getCenterIndex(self, cNumb):
+        return cent[cNumb]
+    def assignToCenter(self, xNumb, cNumb):
+        oldC = self.Xcent[xNumb]
+        if oldC != -1:
+            self.cent[oldC].remove(xNumb)
+        self.Xcent[xNumb] = cNumb
+        self.cent[cNumb].append(xNumb)
     def fit(self, X):
         """
         Estimates parameters for the classifier
@@ -18,10 +31,22 @@ class KMeans:
         Args:
             X (array<m,n>): a matrix of floats with
                 m rows (#samples) and n columns (#features)
+            k Integer, how many clusters to use
+            random Boolean, if true selects K random samples in X
+                as initial centroids
         """
         # TODO: Implement
-        raise NotImplementedError()
-    
+        # initialize centroids, either random or k-first
+        if self.centRand:
+            indexes = np.random.randint(len(X),size=(self.k))
+            self.centroids = np.array(X)[indexes]
+        else:
+            self.centroids = np.array(X[:self.k].copy())
+        # initliallize other arrays
+        self.Xcent = np.zeros(X.shape[0])
+        self.Xcent[:] = -1
+        self.cent = [[-1] for i in range(len(X))]
+
     def predict(self, X):
         """
         Generates predictions
@@ -39,7 +64,11 @@ class KMeans:
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
         # TODO: Implement 
-        raise NotImplementedError()
+
+        # assign to closest centroid
+        for i, sample in enumerate(X):
+            dist = euclidean_distance(np.array(sample), np.array(self.centroids))
+            self.assignToCenter(i, np.argmin(dist))
     
     def get_centroids(self):
         """
