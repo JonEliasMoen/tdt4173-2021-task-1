@@ -6,7 +6,7 @@ import pandas as pd
 
 class KMeans(object):
 
-    def __init__(self, myK, method):
+    def __init__(self, myK, method="Frogy"):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         #self.centroids = np.empty(0)
@@ -29,19 +29,10 @@ class KMeans(object):
     def assignClosest(self, X):
         for i, sample in enumerate(X):
             dist = []
-
             for c in self.centroids:
                 dist.append(euclidean_distance(np.array(sample), np.array(c)))
             myC = int(np.argmin(dist))
             self.assignToCenter(i, myC)
-            #new = np.copy(X[self.cent[myC], :])
-            #oldStd = new.std()
-            #new = np.append(new, sample)
-            #newStd = new.std()
-            #if newStd < oldStd or self.start == True:
-             #   self.assignToCenter(i, myC)
-            #else:
-                #print(newStd, oldStd)
 
     def fit(self, X):
         """
@@ -55,6 +46,12 @@ class KMeans(object):
                 as initial centroids
         """
         # TODO: Implement
+        # X-preprocessing
+        self.xMax = np.max(X[:, 0]) # save ranges.
+        self.yMax = np.max(X[:, 1])
+        X[:, 0] = X[:,0]/np.max(X[:,0]) # normalise
+        X[:, 1] = X[:, 1]/np.max(X[:,1])
+    
         # initialize centroids, either random or k-first
         if self.method == "Frogy": # frogy, choose random k observations
             indexes = np.random.randint(len(X),size=(self.k))
@@ -65,9 +62,12 @@ class KMeans(object):
         self.Xcent = np.zeros(X.shape[0])
         self.Xcent[:] = -1
         self.cent = [[] for i in range(self.k)]
-    def CheckConsistency(self, a): # check if all clusters have nodes
-        uni = np.unique(a)
-        return list(uni) == [i for i in range(self.k)]
+        
+        return X
+
+    def upscaleCentroids(self):
+        self.centroids[:,0] = self.centroids[:,0]*self.xMax
+        self.centroids[:,1] = self.centroids[:,1]*self.yMax
     def predict(self, X):
         """
         Generates predictions
@@ -84,10 +84,9 @@ class KMeans(object):
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
-        # assign to closest centroid
         dist = 2
-        while dist > 0.1:
-            self.assignClosest(X)
+        while dist !=  0: # while converging
+            self.assignClosest(X) # assign all points to closest centroid
             dist = 0
             for i in range(self.k):
                 new = [0,0]
@@ -97,7 +96,7 @@ class KMeans(object):
                 dist += euclidean_distance(self.centroids[i], new)
                 self.centroids[i] = new
             self.start = False
-
+        self.upscaleCentroids() # scale up centroids to original data
         return np.array(self.Xcent, np.int)
 
     def get_centroids(self):
