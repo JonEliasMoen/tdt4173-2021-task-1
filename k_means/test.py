@@ -11,7 +11,7 @@ class testKmeans(unittest.TestCase):
         data_1 = pd.read_csv('data_1.csv')
         X = np.array(data_1[['x0', 'x1']])
 
-        for z in ["Random Partition", "First K", "Frogy"]:
+        for z in ["First K", "Frogy"]:
             k = 2
             model_1 = km.KMeans(k, z)
             self.assertEqual(model_1.k, k)
@@ -29,8 +29,8 @@ class testKmeans(unittest.TestCase):
         data_1 = pd.read_csv('data_2.csv')
         X = np.array(data_1[['x0', 'x1']])
 
-        for z in ["Random Partition", "First K", "Frogy"]:
-            k = 10
+        for z in ["First K", "Frogy"]:
+            k = 9
             model_1 = km.KMeans(k, z)
             self.assertEqual(model_1.k, k)
             model_1.fit(X)
@@ -40,6 +40,8 @@ class testKmeans(unittest.TestCase):
 
 
             a = model_1.predict(X)
+            un = np.unique(a)
+            print(un)
             self.assertEqual(a.shape[0], X.shape[0])
             self.assertEqual(np.max(a)+1, k)
             self.assertEqual(np.sum(np.where(a == -1, 1,0)), 0)

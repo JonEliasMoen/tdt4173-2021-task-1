@@ -29,10 +29,10 @@ class KMeans(object):
     def assignClosest(self, X):
         for i, sample in enumerate(X):
             dist = []
+
             for c in self.centroids:
                 dist.append(euclidean_distance(np.array(sample), np.array(c)))
             myC = int(np.argmin(dist))
-
             self.assignToCenter(i, myC)
             #new = np.copy(X[self.cent[myC], :])
             #oldStd = new.std()
@@ -61,17 +61,13 @@ class KMeans(object):
             self.centroids = np.array(X)[indexes]
         elif self.method == "First K": # select the first k observations
             self.centroids = np.array(X[:self.k].copy())
-        elif self.method == "Random Partition": # randomly assign centers and take a mean
-            indexes = np.random.randint(self.k,size=(len(X)))
-            self.centroids = []
-            for i in range(self.k):
-                self.centroids.append(np.mean(X[indexes == i], axis=0))
-            self.centroids = np.array(self.centroids)
         # initliallize other arrays
         self.Xcent = np.zeros(X.shape[0])
         self.Xcent[:] = -1
         self.cent = [[] for i in range(self.k)]
-
+    def CheckConsistency(self, a): # check if all clusters have nodes
+        uni = np.unique(a)
+        return list(uni) == [i for i in range(self.k)]
     def predict(self, X):
         """
         Generates predictions
@@ -101,6 +97,7 @@ class KMeans(object):
                 dist += euclidean_distance(self.centroids[i], new)
                 self.centroids[i] = new
             self.start = False
+
         return np.array(self.Xcent, np.int)
 
     def get_centroids(self):
