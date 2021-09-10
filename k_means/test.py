@@ -4,7 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import k_means as km # <-- Your implementation
-
+def euc(x,y):
+    return np.linalg.norm(x - y, ord=2, axis=-1)
 
 class testKmeans(unittest.TestCase):
     def testInit(self):
@@ -30,7 +31,7 @@ class testKmeans(unittest.TestCase):
         X = np.array(data_1[['x0', 'x1']])
 
         for z in ["First K", "Frogy"]:
-            k = 9
+            k = 10
             model_1 = km.KMeans(k, z)
             self.assertEqual(model_1.k, k)
             model_1.fit(X)
@@ -40,11 +41,19 @@ class testKmeans(unittest.TestCase):
 
 
             a = model_1.predict(X)
-            un = np.unique(a)
-            print(un)
             self.assertEqual(a.shape[0], X.shape[0])
             self.assertEqual(np.max(a)+1, k)
             self.assertEqual(np.sum(np.where(a == -1, 1,0)), 0)
+            self.assertEqual(euc(np.array([1,1]), np.array([1,2])), 1)
+            cents = model_1.centroids
+            for i,j in enumerate(a):
+                clusterDist = euc(X[i], cents[j])
+                for z in range(k):
+                    if z != j:
+                        otherDist = euc(X[i], cents[z])
+                        self.assertTrue(clusterDist < otherDist)
+
+
             print(z, k, "silhouette", km.euclidean_silhouette(X,a))
             print(z, k, "distortion ", km.euclidean_distortion(X,a))
     """

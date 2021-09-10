@@ -10,29 +10,26 @@ class KMeans(object):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         #self.centroids = np.empty(0)
-        self.start = True
-        self.k = myK
-        self.centroids = np.empty(0)
-        self.method = method
-        self.Xcent = np.empty(0) # 1-D array (m), centroid assignment
+        self.k = myK # number of clusters
+        self.centroids = np.empty(0) # centroids
+        self.method = method # initial assignment
+        self.Xcent = np.empty(0) # 1-D array size=X size, centroid assignment for each X datapoint
         self.cent = [] # 2-D array(M, ..) all indexes in X for centoid i
 
-    def getCenterIndex(self, cNumb):
-        return cent[cNumb]
     def assignToCenter(self, xNumb, cNumb):
-        oldC = int(self.Xcent[xNumb])
-        if oldC != -1:
-            self.cent[oldC].remove(xNumb)
-        self.Xcent[xNumb] = cNumb
-        self.cent[cNumb].append(xNumb)
+        oldC = int(self.Xcent[xNumb]) # previous cluster number
+        if oldC != -1: # if this is not its first assignment
+            self.cent[oldC].remove(xNumb) # remove from centroid->X number datastructure
+        self.Xcent[xNumb] = cNumb # update 1d list
+        self.cent[cNumb].append(xNumb) # update 2d list
 
-    def assignClosest(self, X):
-        for i, sample in enumerate(X):
-            dist = []
-            for c in self.centroids:
+    def assignClosest(self, X): # assign all points to closest centroid
+        for i, sample in enumerate(X): # go through all points
+            dist = [] # list for distances
+            for c in self.centroids: # go through all centroids
                 dist.append(euclidean_distance(np.array(sample), np.array(c)))
-            myC = int(np.argmin(dist))
-            self.assignToCenter(i, myC)
+            myC = int(np.argmin(dist)) # centroid with lowest distance
+            self.assignToCenter(i, myC) # assign datapoint i to cluster myC
 
     def fit(self, X):
         """
@@ -62,10 +59,9 @@ class KMeans(object):
         self.Xcent = np.zeros(X.shape[0])
         self.Xcent[:] = -1
         self.cent = [[] for i in range(self.k)]
-        
-        return X
 
-    def upscaleCentroids(self):
+
+    def upscaleCentroids(self): # upscale the resulting centroids
         self.centroids[:,0] = self.centroids[:,0]*self.xMax
         self.centroids[:,1] = self.centroids[:,1]*self.yMax
     def predict(self, X):
@@ -90,12 +86,11 @@ class KMeans(object):
             dist = 0
             for i in range(self.k):
                 new = [0,0]
-                new[0] = np.mean(X[self.cent[i], 0])
+                new[0] = np.mean(X[self.cent[i], 0]) # calculate means
                 new[1] = np.mean(X[self.cent[i], 1])
 
-                dist += euclidean_distance(self.centroids[i], new)
-                self.centroids[i] = new
-            self.start = False
+                dist += euclidean_distance(self.centroids[i], new) # add change in distance
+                self.centroids[i] = new # assign new centroid
         self.upscaleCentroids() # scale up centroids to original data
         return np.array(self.Xcent, np.int)
 
