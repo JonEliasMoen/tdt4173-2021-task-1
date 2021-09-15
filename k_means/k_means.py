@@ -44,6 +44,7 @@ class KMeans(object):
         """
         # TODO: Implement
         # X-preprocessing
+        X = np.array(X)
         self.xMax = np.max(X[:, 0]) # save ranges.
         self.yMax = np.max(X[:, 1])
         X[:, 0] = X[:,0]/np.max(X[:,0]) # normalise
@@ -80,6 +81,7 @@ class KMeans(object):
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
+        X = np.array(X)
         dist = 2
         while dist !=  0: # while converging
             self.assignClosest(X) # assign all points to closest centroid
