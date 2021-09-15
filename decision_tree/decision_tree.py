@@ -16,6 +16,7 @@ class Node:
         self.Xt, self.Xf = xt, xf
         self.yt, self.Yf = yt, yf
         self.left, self.right = None, None
+        self.leaf = False
 
 class DecisionTree:
     def __init__(self):
@@ -40,10 +41,13 @@ class DecisionTree:
     def buildTree(self, X, y):
         quest, Xt, Xf, yt, yf = self.bestSplit(X,y)
         this = Node(quest, Xt, Xf, yt, yf)
-        if len(Xt) != 0:
-            this.left = self.buildTree(Xt, yt)
-        if len(yt) != 0:
-            this.right = self.buildTree(Xf, yf)
+        if quest != None:
+            if len(Xt) != 0:
+                this.left = self.buildTree(Xt, yt)
+            if len(yt) != 0:
+                this.right = self.buildTree(Xf, yf)
+        else:
+            this.leaf = True
         return this
     def fit(self, X, y):
         """
@@ -66,6 +70,7 @@ class DecisionTree:
         print(self.possible, self.valN)
         self.nCols = X.shape[1]
         print(self.bestSplit(X,y))
+        node = self.buildTree(X, y)
 
     def predict(self, X):
         """
@@ -106,17 +111,19 @@ class DecisionTree:
         # TODO: Implement
         raise NotImplementedError()
     def bestSplit(self, X, y):
-        best = []
+        best = [None, None, None, None, None]
         bestVal = 0
         currentEntropy = entropyRows(y)
-        print(currentEntropy)
         for i in range(self.nCols):
             for val in self.possible[i]:
                 quest = Question(i, val)
                 Xt, Xf, yt, yf = self.split(X, y, quest)
-                if (ig := infoGain(yt, yf, currentEntropy)) > bestVal & len(Xt) != 0 & len(Xf) != 0:
+                ig = infoGain(yt, yf, currentEntropy)
+                print(currentEntropy, ig)
+                if ig > bestVal:
                     best = [quest, Xt, Xf, yt, yf]
                     bestVal = ig
+        print(best)
         return best
 
 
