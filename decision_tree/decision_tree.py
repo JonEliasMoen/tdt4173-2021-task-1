@@ -11,22 +11,27 @@ class Question:
     def testQuestion(self, x):
         return x[self.index] == self.val
 class Node:
-    def __init__(self, quest, xt, xf, yt, yf):
+    def __init__(self, quest, yt, yf):
         self.quest = quest
-        self.Xt, self.Xf = xt, xf
-        self.yt, self.Yf = yt, yf
+        self.yt, self.yf = yt, yf
         self.left, self.right = None, None
         self.leaf = False
-
+        self.value = False
 class DecisionTree:
     def __init__(self):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         self.possible = []  # distinct values for each column
         self.valN = []  # number of distinct values at each column
-        self.cX = []  # copy of X
+        self.cols = []
         self.nCols = 0 # number of columns
-
+        self.tree = None
+        self.rules = []
+    def printQuest(self, q):
+        if q != None:
+            return (self.cols[q.index], q.val)
+        else:
+            return None
     def split(self, x, y, quest):
         Xt, Xf = [], []  # rows true/false
         Yt, Yf = [], []  # index true/false
@@ -40,14 +45,15 @@ class DecisionTree:
         return (Xt, Xf, Yt, Yf)
     def buildTree(self, X, y):
         quest, Xt, Xf, yt, yf = self.bestSplit(X,y)
-        this = Node(quest, Xt, Xf, yt, yf)
+        this = Node(quest, yt, yf)
+        this.leaf = False
         if quest != None:
-            if len(Xt) != 0:
-                this.left = self.buildTree(Xt, yt)
-            if len(yt) != 0:
-                this.right = self.buildTree(Xf, yf)
+            this.left = self.buildTree(Xt, yt) # left = true
+            this.right = self.buildTree(Xf, yf) # right = false
         else:
             this.leaf = True
+            this.value = y[0]
+
         return this
     def fit(self, X, y):
         """
@@ -60,17 +66,50 @@ class DecisionTree:
             y (pd.Series): a vector of discrete ground-truth labels
         """
         # TODO: Implement
+        self.cols = X.columns
+        self.nCols = len(self.cols)
         X = np.array(X)
         y = np.array(y)
-        self.cX = X
+        
         for i in range(X.shape[1]): 
             uniq = np.unique(X[:, i])
             self.possible.append(list(uniq))  # add possible values
             self.valN.append(len(uniq))  # and how many
-        print(self.possible, self.valN)
-        self.nCols = X.shape[1]
-        print(self.bestSplit(X,y))
-        node = self.buildTree(X, y)
+        self.tree = self.buildTree(X, y)
+    def traverse(self, x, node):
+        if node.quest.testQuestion(x):
+            node = node.left
+        else:
+            node = node.right
+        if not node.leaf:
+            return self.traverse(x, node)
+        else:
+            return node.value
+
+    def traverse2(self, node, current):
+        """
+        [
+            ([('Outlook', 'Overcast')], 'Yes'),
+            ([('Outlook', 'Rain'), ('Wind', 'Strong')], 'No'),
+            ...
+        ]
+        """
+        myQ = self.printQuest(node.quest) # get question
+        nodeL = node.left
+        if not nodeL.leaf: # is a node. continue tranverse
+            current.append(myQ) # is true therefore add to current
+            self.traverse2(nodeL, current) # continue traversing
+        else:
+            self.rules.append((current+[myQ], nodeL.value)) # vent all the way left, aka this is true
+         
+        nodeR = node.right
+        if not nodeR.leaf:
+            current = []
+            self.traverse2(nodeR, current)
+        else:
+            if len(current) > 1:
+                del current[0]
+        
 
     def predict(self, X):
         """
@@ -86,10 +125,12 @@ class DecisionTree:
         Returns:
             A length m vector with predictions
         """
-        # TODO: Implement
-
-        raise NotImplementedError()
-
+        X = np.array(X)
+        y = []
+        for x in X:
+            t = self.traverse(x, self.tree)
+            y.append(t)
+        return np.array(y)
     def get_rules(self):
         """
         Returns the decision tree as a list of rules
@@ -109,21 +150,22 @@ class DecisionTree:
         ]
         """
         # TODO: Implement
-        raise NotImplementedError()
+        self.traverse2(self.tree, [])
+        return self.rules
     def bestSplit(self, X, y):
         best = [None, None, None, None, None]
         bestVal = 0
         currentEntropy = entropyRows(y)
-        for i in range(self.nCols):
-            for val in self.possible[i]:
-                quest = Question(i, val)
-                Xt, Xf, yt, yf = self.split(X, y, quest)
-                ig = infoGain(yt, yf, currentEntropy)
-                print(currentEntropy, ig)
-                if ig > bestVal:
-                    best = [quest, Xt, Xf, yt, yf]
-                    bestVal = ig
-        print(best)
+        if currentEntropy > 0:
+            for i in range(self.nCols):
+                for val in self.possible[i]:
+                    quest = Question(i, val)
+                    Xt, Xf, yt, yf = self.split(X, y, quest)
+                    if len(yt) != 0 or len(yf) != 0:
+                        ig = infoGain(yt, yf, currentEntropy)
+                        if ig > bestVal:
+                            best = [quest, Xt, Xf, yt, yf]
+                            bestVal = ig
         return best
 
 
