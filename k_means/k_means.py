@@ -6,7 +6,7 @@ import pandas as pd
 
 class KMeans(object):
 
-    def __init__(self, myK, method="Frogy"):
+    def __init__(self, myK, method="Frogy", preprocessing=False):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         #self.centroids = np.empty(0)
@@ -15,6 +15,7 @@ class KMeans(object):
         self.method = method # initial assignment
         self.Xcent = np.empty(0) # 1-D array size=X size, centroid assignment for each X datapoint
         self.cent = [] # 2-D array(M, ..) all indexes in X for centoid i
+        self.preprocessing = preprocessing
 
     def assignToCenter(self, xNumb, cNumb):
         oldC = int(self.Xcent[xNumb]) # previous cluster number
@@ -45,10 +46,11 @@ class KMeans(object):
         # TODO: Implement
         # X-preprocessing
         X = np.array(X)
-        self.xMax = np.max(X[:, 0]) # save ranges.
-        self.yMax = np.max(X[:, 1])
-        X[:, 0] = X[:,0]/np.max(X[:,0]) # normalise
-        X[:, 1] = X[:, 1]/np.max(X[:,1])
+        if self.preprocessing:
+            self.xMax = np.max(X[:, 0]) # save ranges.
+            self.yMax = np.max(X[:, 1])
+            X[:, 0] = X[:,0]/np.max(X[:,0]) # normalise
+            X[:, 1] = X[:, 1]/np.max(X[:,1])
     
         # initialize centroids, either random or k-first
         if self.method == "Frogy": # frogy, choose random k observations
@@ -61,7 +63,7 @@ class KMeans(object):
         self.Xcent[:] = -1
         self.cent = [[] for i in range(self.k)]
 
-
+        return X
     def upscaleCentroids(self): # upscale the resulting centroids
         self.centroids[:,0] = self.centroids[:,0]*self.xMax
         self.centroids[:,1] = self.centroids[:,1]*self.yMax
@@ -93,7 +95,7 @@ class KMeans(object):
 
                 dist += euclidean_distance(self.centroids[i], new) # add change in distance
                 self.centroids[i] = new # assign new centroid
-        self.upscaleCentroids() # scale up centroids to original data
+        print(np.max(self.centroids[:,0]))
         return np.array(self.Xcent, np.int)
 
     def get_centroids(self):

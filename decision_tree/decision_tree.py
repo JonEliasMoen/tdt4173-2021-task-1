@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.defchararray import split
 import pandas as pd
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
@@ -18,7 +19,7 @@ class Node:
         self.leaf = False
         self.value = False
 class DecisionTree:
-    def __init__(self):
+    def __init__(self, normalised=False):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         self.possible = []  # distinct values for each column
@@ -27,6 +28,7 @@ class DecisionTree:
         self.nCols = 0 # number of columns
         self.tree = None
         self.rules = []
+        self.normalised = normalised
     def printQuest(self, q):
         if q != None:
             return (self.cols[q.index], q.val)
@@ -75,6 +77,8 @@ class DecisionTree:
             uniq = np.unique(X[:, i])
             self.possible.append(list(uniq))  # add possible values
             self.valN.append(len(uniq))  # and how many
+        index = np.argmax(self.valN)
+        print(index)
         self.tree = self.buildTree(X, y)
     def traverse(self, x, node):
         if node.quest.testQuestion(x):
@@ -100,9 +104,9 @@ class DecisionTree:
             current.append(myQ) # is true therefore add to current
             self.traverse2(nodeL, current) # continue traversing
         else:
-            self.rules.append((current+[myQ], nodeL.value)) # vent all the way left, aka this is true
+            self.rules.append((current+[myQ], nodeL.value)) # went all the way left, aka this is true
          
-        nodeR = node.right
+        nodeR = node.right # go right
         if not nodeR.leaf:
             current = []
             self.traverse2(nodeR, current)
@@ -153,19 +157,25 @@ class DecisionTree:
         self.traverse2(self.tree, [])
         return self.rules
     def bestSplit(self, X, y):
-        best = [None, None, None, None, None]
+        best = [None, None, None, None, None]   
         bestVal = 0
         currentEntropy = entropyRows(y)
+        X = np.array(X)
         if currentEntropy > 0:
             for i in range(self.nCols):
-                for val in self.possible[i]:
+                counts = getCounts(X[:, i])
+                splitEntropy = -np.sum(counts/len(X[:, i])*np.log(counts/len(X[:, i])))
+                for z, val in enumerate(self.possible[i]):
                     quest = Question(i, val)
                     Xt, Xf, yt, yf = self.split(X, y, quest)
                     if len(yt) != 0 or len(yf) != 0:
                         ig = infoGain(yt, yf, currentEntropy)
-                        if ig > bestVal:
+                        if self.normalised:
+                            ig /= splitEntropy+0.1
+                        if ig> bestVal:
                             best = [quest, Xt, Xf, yt, yf]
                             bestVal = ig
+        print(self.printQuest(best[0]))
         return best
 
 
@@ -173,6 +183,7 @@ class DecisionTree:
 def infoGain(l, r, currentEntropy): # information gain = reduction in entropy
     w1 = float(len(l))/(len(l) + len(r)) # total size
     return currentEntropy-w1*entropyRows(l) - (1-w1)*entropyRows(r)
+
 def accuracy(y_true, y_pred):
     """
     Computes discrete classification accuracy

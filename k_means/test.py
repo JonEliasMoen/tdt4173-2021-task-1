@@ -32,7 +32,7 @@ class testKmeans(unittest.TestCase):
 
         for z in ["First K", "Frogy"]:
             k = 10
-            model_1 = km.KMeans(k, z)
+            model_1 = km.KMeans(k, z, preprocessing=True)
             self.assertEqual(model_1.k, k)
             model_1.fit(X)
             self.assertEqual(model_1.centroids.shape, (k,X.shape[1]))

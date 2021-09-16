@@ -39,7 +39,7 @@ class testDecision(unittest.TestCase):
 
         print(f'Train: {dt.accuracy(y_train, model_2.predict(X_train)) * 100 :.1f}%')
         print(f'Valid: {dt.accuracy(y_valid, model_2.predict(X_valid)) * 100 :.1f}%')
-        print(f'Train: {dt.accuracy(y_test, model_2.predict(X_test)) * 100 :.1f}%')
+        print(f'Test: {dt.accuracy(y_test, model_2.predict(X_test)) * 100 :.1f}%')
 
 
 
