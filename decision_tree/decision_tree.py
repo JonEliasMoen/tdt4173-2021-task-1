@@ -18,8 +18,11 @@ class Node:
         self.left, self.right = None, None
         self.leaf = False
         self.value = False
+    def convert(self, y):
+        u, c = np.unique(y, return_counts=True)
+        self.value = u[np.argmax(c)]
 class DecisionTree:
-    def __init__(self, normalised=False):
+    def __init__(self, normalise=False, thres=0):
         # NOTE: Feel free add any hyperparameters
         # (with defaults) as you see fit
         self.possible = []  # distinct values for each column
@@ -28,7 +31,8 @@ class DecisionTree:
         self.nCols = 0 # number of columns
         self.tree = None
         self.rules = []
-        self.normalised = normalised
+        self.normalised = normalise
+        self.thres = thres
     def printQuest(self, q):
         if q != None:
             return (self.cols[q.index], q.val)
@@ -54,7 +58,7 @@ class DecisionTree:
             this.right = self.buildTree(Xf, yf) # right = false
         else:
             this.leaf = True
-            this.value = y[0]
+            this.convert(y)
 
         return this
     def fit(self, X, y):
@@ -80,12 +84,12 @@ class DecisionTree:
         index = np.argmax(self.valN)
         print(index)
         self.tree = self.buildTree(X, y)
-    def traverse(self, x, node):
-        if node.quest.testQuestion(x):
-            node = node.left
-        else:
-            node = node.right
+    def traverse(self, x, node):  
         if not node.leaf:
+            if node.quest.testQuestion(x):
+                node = node.left
+            else:
+                node = node.right
             return self.traverse(x, node)
         else:
             return node.value
@@ -159,9 +163,10 @@ class DecisionTree:
     def bestSplit(self, X, y):
         best = [None, None, None, None, None]   
         bestVal = 0
+        ig = -1
         currentEntropy = entropyRows(y)
         X = np.array(X)
-        if currentEntropy > 0:
+        if currentEntropy > 0.1:
             for i in range(self.nCols):
                 counts = getCounts(X[:, i])
                 splitEntropy = -np.sum(counts/len(X[:, i])*np.log(counts/len(X[:, i])))
@@ -175,7 +180,8 @@ class DecisionTree:
                         if ig> bestVal:
                             best = [quest, Xt, Xf, yt, yf]
                             bestVal = ig
-        print(self.printQuest(best[0]))
+        if ig < self.thres:
+            best = [None, None, None, None, None]
         return best
 
 

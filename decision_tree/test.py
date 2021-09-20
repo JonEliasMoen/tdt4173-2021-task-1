@@ -34,7 +34,7 @@ class testDecision(unittest.TestCase):
         X_test, y_test = data_2_test.drop(columns=['Outcome', 'Split']), data_2_test.Outcome
         data_2.Split.value_counts()
 
-        model_2 = dt.DecisionTree()  # <-- Feel free to add hyperparameters 
+        model_2 = dt.DecisionTree(normalise=True, thres=0)  # <-- Feel free to add hyperparameters 
         model_2.fit(X_train, y_train)
 
         print(f'Train: {dt.accuracy(y_train, model_2.predict(X_train)) * 100 :.1f}%')
